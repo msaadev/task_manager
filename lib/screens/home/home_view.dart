@@ -1,7 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:task_manager/core/models/task_model.dart';
+
+import '../task_detail/task_detail.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -60,46 +63,71 @@ class _HomeViewState extends State<HomeView> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(context, CupertinoPageRoute(builder: (context) {
+            return const TaskDetail();
+          })).then((value) {
+            if (value != null) {
+              setState(() {
+                taskList.add(value);
+              });
+            }
+          });
+        },
         icon: const Icon(Icons.add),
         label: const Text('Görev Ekle'),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: ListView.separated(
-        padding: EdgeInsets.all(10),
+        padding: const EdgeInsets.all(10),
         separatorBuilder: (context, index) => const Divider(),
         itemCount: taskList.length,
         itemBuilder: (context, index) {
           var item = taskList[index];
           var date = DateFormat(
-            'dd MMMM yyyy , hh:mm',
+            'dd MMMM yyyy , HH:mm',
           ).format(item.time ?? DateTime.now());
 
-          return Row(
-            children: [
-              AnimatedContainer(
-                transform: Matrix4.translationValues(
-                    isEditing ? 0 : -MediaQuery.of(context).size.width, 0, 0),
-                curve: Curves.easeInOut,
-                width: isEditing ? 50 : 0,
-                duration: const Duration(milliseconds: 500),
-                child:
-                    isEditing ? deleteButton(context, index) : const SizedBox(),
-              ),
-              Expanded(
-                  child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(item.title!,
-                        style: Theme.of(context).textTheme.headlineSmall),
-                    Text(date, style: Theme.of(context).textTheme.bodySmall),
-                    Text(item.description!),
-                  ],
+          return InkWell(
+            onTap: () {
+              Navigator.push(context, CupertinoPageRoute(builder: (context) {
+                return TaskDetail(task: item);
+              })).then((value) {
+                if (value != null) {
+                  setState(() {
+                    taskList[index] = value;
+                  });
+                }
+              });
+            },
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  transform: Matrix4.translationValues(
+                      isEditing ? 0 : -MediaQuery.of(context).size.width, 0, 0),
+                  curve: Curves.easeInOut,
+                  width: isEditing ? 50 : 0,
+                  duration: const Duration(milliseconds: 500),
+                  child: isEditing
+                      ? deleteButton(context, index)
+                      : const SizedBox(),
                 ),
-              ))
-            ],
+                Expanded(
+                    child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(item.title ?? '',
+                          style: Theme.of(context).textTheme.headlineSmall),
+                          
+                      Text(date, style: Theme.of(context).textTheme.bodySmall),
+                      Text(item.description ?? ''),
+                    ],
+                  ),
+                ))
+              ],
+            ),
           );
         },
       ),

@@ -1,9 +1,9 @@
 class Task {
-  final DateTime? time;
-  final String? title;
-  final String? description;
-  final String? music;
-  final int? duration;
+   DateTime? time;
+   String? title;
+   String? description;
+   String? music;
+   int? duration;
 
   Task({
     this.time,
