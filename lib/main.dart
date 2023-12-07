@@ -1,8 +1,13 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:task_manager/screens/auth/signin_view.dart';
 import 'package:task_manager/screens/home/home_view.dart';
 
-void main() async {
+import 'core/firebase/firebase_auth_services.dart';
 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -11,10 +16,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'Görev Yöneticisi',
-      locale: Locale('tr', 'TR'),
-      home: HomeView(),
+      locale: const Locale('tr', 'TR'),
+      home: FirebaseAuthService.instance.isLogged()
+          ? const HomeView()
+          : const SigninView(),
     );
   }
 }

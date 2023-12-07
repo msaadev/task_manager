@@ -1,11 +1,14 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:task_manager/Widgets/input/MSAInput.dart';
+import 'package:task_manager/core/firebase/firebase_firestore_services.dart';
 import 'package:task_manager/core/models/task_model.dart';
 
 class TaskDetail extends StatefulWidget {
-  final Task? task;
+  final TaskModel? task;
   const TaskDetail({super.key, this.task});
 
   @override
@@ -13,13 +16,13 @@ class TaskDetail extends StatefulWidget {
 }
 
 class _TaskDetailState extends State<TaskDetail> {
-  late final Task task;
+  late final TaskModel task;
   late final TextEditingController titleController, descriptionController;
 
   @override
   void initState() {
     super.initState();
-    task = widget.task ?? Task();
+    task = widget.task ?? TaskModel();
     titleController = TextEditingController(text: task.title);
     descriptionController = TextEditingController(text: task.description);
   }
@@ -29,16 +32,33 @@ class _TaskDetailState extends State<TaskDetail> {
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.pop(context, task);
+        onPressed: () async {
+          var a;
+          if (widget.task != null) {
+            a = await FirebaseFirestoreServices.instance.updateTask(task);
+          } else {
+            a = await FirebaseFirestoreServices.instance.addTask(task);
+          }
+
+          if (a != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(a),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          } else {
+            Navigator.pop(context, task);
+          }
         },
-        icon: Icon(Icons.check),
-        label: Text('Kaydet'),
+        icon: const Icon(Icons.check),
+        label: Text(widget.task != null ? 'Kaydet' : 'Ekle'),
       ),
       appBar: AppBar(
         title: Text(task.title ?? 'Görev Ekle'),
       ),
-      body: ListView(padding: EdgeInsets.all(10), children: [
+      body: ListView(padding: const EdgeInsets.all(10), children: [
         Form(
             child: Column(
           children: [
@@ -51,7 +71,7 @@ class _TaskDetailState extends State<TaskDetail> {
                 task.title = p0;
               },
             ),
-            Divider(),
+            const Divider(),
             MSAInput(
               controller: descriptionController,
               radius: 0,
@@ -64,10 +84,10 @@ class _TaskDetailState extends State<TaskDetail> {
             ),
           ],
         )),
-        Divider(),
+        const Divider(),
         ListTile(
-          title: Text('Tarih Seçiniz'),
-          trailing: Icon(Icons.calendar_month),
+          title: const Text('Tarih Seçiniz'),
+          trailing: const Icon(Icons.calendar_month),
           subtitle: Text(
             task.time == null
                 ? 'Tarih Seçilmedi'
@@ -88,15 +108,15 @@ class _TaskDetailState extends State<TaskDetail> {
             });
           },
         ),
-        Divider(),
+        const Divider(),
         ListTile(
-          title: Text('Saat Seçiniz'),
+          title: const Text('Saat Seçiniz'),
           subtitle: Text(
             task.time == null
                 ? 'Saat Seçilmedi'
                 : DateFormat('HH:mm').format(task.time!),
           ),
-          trailing: Icon(Icons.schedule),
+          trailing: const Icon(Icons.schedule),
           onTap: () {
             showTimePicker(
               context: context,
@@ -116,15 +136,15 @@ class _TaskDetailState extends State<TaskDetail> {
             });
           },
         ),
-        Divider(),
+        const Divider(),
         ListTile(
-          title: Text('Hatırlatma Zamanı Seçiniz'),
+          title: const Text('Hatırlatma Zamanı Seçiniz'),
           subtitle: Text(
             task.duration == null
                 ? 'Hatırlatma Zamanı Seçilmedi'
                 : '${task.duration} dakika',
           ),
-          trailing: Icon(Icons.timer),
+          trailing: const Icon(Icons.timer),
           onTap: () {
             _showDialog(
               CupertinoPicker(
@@ -149,8 +169,8 @@ class _TaskDetailState extends State<TaskDetail> {
             );
           },
         ),
-        Divider(),
-        ListTile()
+        const Divider(),
+        const ListTile()
       ]),
     );
   }

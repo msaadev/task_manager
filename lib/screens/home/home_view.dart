@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:task_manager/core/firebase/firebase_firestore_services.dart';
 
 import 'package:task_manager/core/models/task_model.dart';
 
@@ -14,36 +15,14 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  List<Task> taskList = [];
+  List<TaskModel> taskList = [];
   bool isEditing = false;
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-
-    taskList = [
-      Task(
-        time: DateTime.now(),
-        title: 'Flutter Öğren',
-        description: 'Flutter öğrenmeye başla',
-        music: 'https://www.bensound.com/bensound-music/bensound-summer.mp3',
-        duration: 20,
-      ),
-      Task(
-        time: DateTime.now().add(const Duration(hours: 1)),
-        title: 'Flutter Öğren',
-        description: 'Flutter öğrenmeye başla 2',
-        music: 'https://www.bensound.com/bensound-music/bensound-summer.mp3',
-        duration: 30,
-      ),
-      Task(
-        time: DateTime.now().add(const Duration(hours: 2)),
-        title: 'Flutter Öğren',
-        description: 'Flutter öğrenmeye başla 3',
-        music: 'https://www.bensound.com/bensound-music/bensound-summer.mp3',
-        duration: 40,
-      ),
-    ];
+    fetchTaskList();
   }
 
   @override
@@ -78,59 +57,75 @@ class _HomeViewState extends State<HomeView> {
         label: const Text('Görev Ekle'),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      body: ListView.separated(
-        padding: const EdgeInsets.all(10),
-        separatorBuilder: (context, index) => const Divider(),
-        itemCount: taskList.length,
-        itemBuilder: (context, index) {
-          var item = taskList[index];
-          var date = DateFormat(
-            'dd MMMM yyyy , HH:mm',
-          ).format(item.time ?? DateTime.now());
-
-          return InkWell(
-            onTap: () {
-              Navigator.push(context, CupertinoPageRoute(builder: (context) {
-                return TaskDetail(task: item);
-              })).then((value) {
-                if (value != null) {
-                  setState(() {
-                    taskList[index] = value;
-                  });
-                }
-              });
-            },
-            child: Row(
-              children: [
-                AnimatedContainer(
-                  transform: Matrix4.translationValues(
-                      isEditing ? 0 : -MediaQuery.of(context).size.width, 0, 0),
-                  curve: Curves.easeInOut,
-                  width: isEditing ? 50 : 0,
-                  duration: const Duration(milliseconds: 500),
-                  child: isEditing
-                      ? deleteButton(context, index)
-                      : const SizedBox(),
-                ),
-                Expanded(
-                    child: Padding(
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : taskList.isEmpty
+              ? const Center(
+                  child: Text('Görev Bulunamadı'),
+                )
+              : ListView.separated(
                   padding: const EdgeInsets.all(10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(item.title ?? '',
-                          style: Theme.of(context).textTheme.headlineSmall),
-                          
-                      Text(date, style: Theme.of(context).textTheme.bodySmall),
-                      Text(item.description ?? ''),
-                    ],
-                  ),
-                ))
-              ],
-            ),
-          );
-        },
-      ),
+                  separatorBuilder: (context, index) => const Divider(),
+                  itemCount: taskList.length,
+                  itemBuilder: (context, index) {
+                    var item = taskList[index];
+                    var date = DateFormat(
+                      'dd MMMM yyyy , HH:mm',
+                    ).format(item.time ?? DateTime.now());
+
+                    return InkWell(
+                      onTap: () {
+                        Navigator.push(context,
+                            CupertinoPageRoute(builder: (context) {
+                          return TaskDetail(task: item);
+                        })).then((value) {
+                          if (value != null) {
+                            setState(() {
+                              taskList[index] = value;
+                            });
+                          }
+                        });
+                      },
+                      child: Row(
+                        children: [
+                          AnimatedContainer(
+                            transform: Matrix4.translationValues(
+                                isEditing
+                                    ? 0
+                                    : -MediaQuery.of(context).size.width,
+                                0,
+                                0),
+                            curve: Curves.easeInOut,
+                            width: isEditing ? 50 : 0,
+                            duration: const Duration(milliseconds: 500),
+                            child: isEditing
+                                ? deleteButton(context, index)
+                                : const SizedBox(),
+                          ),
+                          Expanded(
+                              child: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(item.title ?? '',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall),
+                                Text(date,
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall),
+                                Text(item.description ?? ''),
+                              ],
+                            ),
+                          ))
+                        ],
+                      ),
+                    );
+                  },
+                ),
     );
   }
 
@@ -151,11 +146,23 @@ class _HomeViewState extends State<HomeView> {
                   child: const Text('İptal'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    setState(() {
-                      taskList.removeAt(index);
-                    });
-                    Navigator.pop(context);
+                  onPressed: () async {
+                    var a = await FirebaseFirestoreServices.instance
+                        .deleteTask(taskList[index]);
+
+                    if (a == null) {
+                      setState(() {
+                        taskList.removeAt(index);
+                      });
+                      Navigator.pop(context);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(a),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   },
                   child: const Text('Sil'),
                 ),
@@ -166,5 +173,20 @@ class _HomeViewState extends State<HomeView> {
       },
       icon: const Icon(Icons.delete),
     );
+  }
+
+  fetchTaskList() async {
+    setLoading(true);
+    await FirebaseFirestoreServices.instance.getTasks().then((value) {
+      taskList.clear();
+      taskList.addAll(value);
+    });
+    setLoading(false);
+  }
+
+  setLoading([bool? value]) {
+    setState(() {
+      isLoading = value ?? !isLoading;
+    });
   }
 }
