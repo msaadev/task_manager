@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
-
 class TaskModel {
-  String id = UniqueKey().toString();
+  String? id ;
    DateTime? time;
    String? title;
    String? description;
@@ -14,6 +12,7 @@ class TaskModel {
     this.description,
     this.music,
     this.duration,
+    this.id
   });
 
   TaskModel.fromJson(Map<String, dynamic> json) {

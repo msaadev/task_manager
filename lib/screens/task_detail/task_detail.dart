@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -18,6 +19,7 @@ class TaskDetail extends StatefulWidget {
 class _TaskDetailState extends State<TaskDetail> {
   late final TaskModel task;
   late final TextEditingController titleController, descriptionController;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -32,28 +34,15 @@ class _TaskDetailState extends State<TaskDetail> {
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          var a;
-          if (widget.task != null) {
-            a = await FirebaseFirestoreServices.instance.updateTask(task);
-          } else {
-            a = await FirebaseFirestoreServices.instance.addTask(task);
-          }
-
-          if (a != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(a),
-                backgroundColor: Colors.red,
-              ),
-            );
-            return;
-          } else {
-            Navigator.pop(context, task);
-          }
-        },
-        icon: const Icon(Icons.check),
-        label: Text(widget.task != null ? 'Kaydet' : 'Ekle'),
+        onPressed: save,
+        icon: isLoading
+            ? const Center(
+                child: CircularProgressIndicator(),
+              )
+            : const Icon(Icons.check),
+        label: isLoading
+            ? const SizedBox()
+            : Text(widget.task != null ? 'Kaydet' : 'Ekle'),
       ),
       appBar: AppBar(
         title: Text(task.title ?? 'Görev Ekle'),
@@ -175,6 +164,71 @@ class _TaskDetailState extends State<TaskDetail> {
     );
   }
 
+  save() async {
+    if (task.title == null || task.title!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Görev Başlığı Boş Olamaz'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (task.time == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tarih Seçiniz'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    if (task.duration == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Hatırlatma Zamanı Seçiniz'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    var a;
+    setLoading(true);
+    if (widget.task != null) {
+      a = await FirebaseFirestoreServices.instance.updateTask(task);
+    } else {
+      task.id = ((await FirebaseFirestoreServices.instance.getTaskCount()) + 1 ).toString();
+      a = await FirebaseFirestoreServices.instance.addTask(task);
+    }
+
+    setLoading(false);
+    if (a != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(a),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    } else {
+      setAlarm();
+      Navigator.pop(context, task);
+    }
+  }
+
+  setAlarm() {
+    AndroidAlarmManager.oneShotAt(
+        (task.time ?? DateTime.now())
+            .subtract(Duration(minutes: task.duration ?? 0)),
+        int.tryParse(task.id ?? '1') ?? 1, alarmCallback);
+    print(
+        'alarm setlendi ${int.tryParse(task.id ?? '1') ?? 1} ${(task.time ?? DateTime.now()).subtract(Duration(minutes: task.duration ?? 0))}');
+  }
+
+
+  
+
   void _showDialog(Widget child) {
     showCupertinoModalPopup<void>(
       context: context,
@@ -195,4 +249,18 @@ class _TaskDetailState extends State<TaskDetail> {
       ),
     );
   }
+
+  setLoading([bool? value]) {
+    setState(() {
+      isLoading = value ?? !isLoading;
+    });
+  }
 }
+
+
+@pragma('vm:entry-point')
+  void alarmCallback() {
+
+     print(" Hello, world! isolate= function='");
+     
+  }

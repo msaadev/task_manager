@@ -94,4 +94,22 @@ class FirebaseFirestoreServices {
       }
     }
   }
+
+  Future<int> getTaskCount() async {
+    try {
+      var request = await _firestore
+          .collection('Users')
+          .doc(_auth.currentUser!.uid)
+          .collection('Tasks')
+          .get();
+
+      return request.docs.length;
+    } catch (e) {
+      if (e is FirebaseException) {
+        return 0;
+      } else {
+        return 0;
+      }
+    }
+  }
 }
