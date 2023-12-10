@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "547631675680",
+    "project_id": "fatiko-8b5f8",
+    "storage_bucket": "fatiko-8b5f8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:547631675680:android:4ce3a647cc9db36bf93f45",
+        "android_client_info": {
+          "package_name": "com.msamil.task_manager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCU9wiFX4_q54JS3HgD9JZCqHcBadKPRy4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

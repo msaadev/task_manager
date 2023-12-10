@@ -3,10 +3,14 @@
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:flutter_system_ringtones/flutter_system_ringtones.dart';
 import 'package:intl/intl.dart';
 import 'package:task_manager/Widgets/input/MSAInput.dart';
 import 'package:task_manager/core/firebase/firebase_firestore_services.dart';
 import 'package:task_manager/core/models/task_model.dart';
+import 'package:task_manager/main.dart';
 
 class TaskDetail extends StatefulWidget {
   final TaskModel? task;
@@ -25,6 +29,7 @@ class _TaskDetailState extends State<TaskDetail> {
   void initState() {
     super.initState();
     task = widget.task ?? TaskModel();
+    task.duration ??= 0;
     titleController = TextEditingController(text: task.title);
     descriptionController = TextEditingController(text: task.description);
   }
@@ -48,6 +53,26 @@ class _TaskDetailState extends State<TaskDetail> {
         title: Text(task.title ?? 'Görev Ekle'),
       ),
       body: ListView(padding: const EdgeInsets.all(10), children: [
+        // ElevatedButton(
+        //     onPressed: () async {
+        //       var a = await FlutterSystemRingtones.getAlarmSounds();
+        //       a.forEach((element) {
+        //         print(element.toJson());
+        //         print('----------------- \n ');
+        //       });
+
+        //       FlutterRingtonePlayer().play(
+        //         fromFile: a[10].uri,
+        //         ios: IosSounds.alarm,
+        //         looping: false, // Android only - API >= 28
+        //         volume: 0.9, // Android only - API >= 28
+        //         asAlarm: true, // Android only - all APIs
+        //       );
+
+        //       await Future.delayed(const Duration(seconds: 10))
+        //           .then((value) => FlutterRingtonePlayer().stop());
+        //     },
+        //     child: Icon(Icons.alarm)),
         Form(
             child: Column(
           children: [
@@ -198,7 +223,8 @@ class _TaskDetailState extends State<TaskDetail> {
     if (widget.task != null) {
       a = await FirebaseFirestoreServices.instance.updateTask(task);
     } else {
-      task.id = ((await FirebaseFirestoreServices.instance.getTaskCount()) + 1 ).toString();
+      task.id = ((await FirebaseFirestoreServices.instance.getTaskCount()) + 1)
+          .toString();
       a = await FirebaseFirestoreServices.instance.addTask(task);
     }
 
@@ -221,13 +247,12 @@ class _TaskDetailState extends State<TaskDetail> {
     AndroidAlarmManager.oneShotAt(
         (task.time ?? DateTime.now())
             .subtract(Duration(minutes: task.duration ?? 0)),
-        int.tryParse(task.id ?? '1') ?? 1, alarmCallback);
+        int.tryParse(task.id ?? '1') ?? 1, 
+      alarmCallback
+    );
     print(
         'alarm setlendi ${int.tryParse(task.id ?? '1') ?? 1} ${(task.time ?? DateTime.now()).subtract(Duration(minutes: task.duration ?? 0))}');
   }
-
-
-  
 
   void _showDialog(Widget child) {
     showCupertinoModalPopup<void>(
@@ -257,10 +282,30 @@ class _TaskDetailState extends State<TaskDetail> {
   }
 }
 
-
 @pragma('vm:entry-point')
-  void alarmCallback() {
+void alarmCallback() {
+  print(" Hello, world! isolate= function=");
+  FlutterRingtonePlayer().play(
+    // fromFile: ,
+    android: AndroidSounds.ringtone,
+    ios: IosSounds.glass,
+    looping: false, // Android only - API >= 28
+    volume: 1, // Android only - API >= 28
+    asAlarm: true, // Android only - all APIs
+  );
+  Future.delayed(const Duration(seconds: 30))
+      .then((value) => FlutterRingtonePlayer().stop());
 
-     print(" Hello, world! isolate= function='");
-     
-  }
+      const AndroidNotificationDetails androidNotificationDetails =
+    AndroidNotificationDetails('your channel id', 'your channel name',
+        channelDescription: 'your channel description',
+        importance: Importance.max,
+        priority: Priority.high,
+        ticker: 'ticker');
+const NotificationDetails notificationDetails =
+    NotificationDetails(android: androidNotificationDetails);
+ flutterLocalNotificationsPlugin.show(
+    0, 'plain title', 'plain body', notificationDetails,
+    payload: 'item x');
+  
+}
