@@ -1,9 +1,11 @@
+import 'package:flutter_system_ringtones/flutter_system_ringtones.dart';
+
 class TaskModel {
   String? id ;
    DateTime? time;
    String? title;
    String? description;
-   String? music;
+   Ringtone? music;
    int? duration;
 
   TaskModel({
@@ -19,7 +21,7 @@ class TaskModel {
     time = json['time'] == null ? null : DateTime.parse(json['time']);
     title = json['title'];
     description = json['description'];
-    music = json['music'];
+    music = json['music'] == null ? null : Ringtone.fromJson(json['music']);
     duration = json['duration'];
     id = json['id'];
   }
@@ -29,7 +31,7 @@ class TaskModel {
     data['time'] = time?.toIso8601String();
     data['title'] = title;
     data['description'] = description;
-    data['music'] = music;
+    data['music'] = music?.toJson();
     data['duration'] = duration;
     data['id'] = id;
     return data;

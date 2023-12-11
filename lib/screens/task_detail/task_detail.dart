@@ -1,11 +1,13 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:convert';
+import 'dart:isolate';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:flutter_system_ringtones/flutter_system_ringtones.dart';
 import 'package:intl/intl.dart';
 import 'package:task_manager/Widgets/input/MSAInput.dart';
 import 'package:task_manager/core/firebase/firebase_firestore_services.dart';
@@ -26,6 +28,8 @@ class _TaskDetailState extends State<TaskDetail> {
   late final TaskModel task;
   late final TextEditingController titleController, descriptionController;
   bool isLoading = false;
+  List<Ringtone> ringtoneList = [];
+  Ringtone? selectedRingtone;
 
   @override
   void initState() {
@@ -34,6 +38,15 @@ class _TaskDetailState extends State<TaskDetail> {
     task.duration ??= 0;
     titleController = TextEditingController(text: task.title);
     descriptionController = TextEditingController(text: task.description);
+    FlutterSystemRingtones.getAlarmSounds().then((value) {
+      ringtoneList = value;
+      if (widget.task != null) {
+        selectedRingtone = task.music;
+      } else {
+        selectedRingtone = ringtoneList[0];
+        task.music = selectedRingtone;
+      }
+    });
   }
 
   @override
@@ -55,28 +68,6 @@ class _TaskDetailState extends State<TaskDetail> {
         title: Text(task.title ?? 'Görev Ekle'),
       ),
       body: ListView(padding: const EdgeInsets.all(10), children: [
-        ElevatedButton(
-            onPressed: () async {
-              // var a = await FlutterSystemRingtones.getAlarmSounds();
-              // a.forEach((element) {
-              //   print(element.toJson());
-              //   print('----------------- \n ');
-              // });
-
-              // FlutterRingtonePlayer().play(
-              //   fromFile: a[10].uri,
-              //   ios: IosSounds.alarm,
-              //   looping: false, // Android only - API >= 28
-              //   volume: 0.9, // Android only - API >= 28
-              //   asAlarm: true, // Android only - all APIs
-              // );
-
-              // await Future.delayed(const Duration(seconds: 10))
-              //     .then((value) => FlutterRingtonePlayer().stop());
-
-              FirebaseFirestoreServices.instance.getTaskCount();
-            },
-            child: Icon(Icons.alarm)),
         Form(
             child: Column(
           children: [
@@ -188,6 +179,39 @@ class _TaskDetailState extends State<TaskDetail> {
           },
         ),
         const Divider(),
+        ListTile(
+          title: const Text('Alarm Sesi Seçiniz'),
+          subtitle: Text(
+            task.music == null
+                ? 'Alarm Sesi Seçilmedi'
+                : '${task.music?.title}',
+          ),
+          trailing: const Icon(Icons.timer),
+          onTap: () {
+            _showDialog(CupertinoPicker(
+                magnification: 1.22,
+                squeeze: 1.2,
+                useMagnifier: true,
+                itemExtent: 32,
+                // This sets the initial item.
+                scrollController: FixedExtentScrollController(
+                  initialItem: task.duration ?? 0,
+                ),
+                // This is called when selected item is changed.
+                onSelectedItemChanged: (int selectedItem) {
+                  setState(() {
+                    task.music = ringtoneList[selectedItem];
+                  });
+                },
+                children: List<Widget>.generate(
+                  ringtoneList.length,
+                  (int index) => Center(
+                    child: Text('${ringtoneList[index].title}'),
+                  ),
+                )));
+          },
+        ),
+        const Divider(),
         const ListTile()
       ]),
     );
@@ -259,12 +283,11 @@ class _TaskDetailState extends State<TaskDetail> {
                 channelDescription: channel.description,
                 playSound: false,
                 importance: Importance.max,
-                actions: [])),
+                category: AndroidNotificationCategory.alarm)),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         payload: json.encode(task.toJson()),
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime);
-
     AndroidAlarmManager.oneShotAt(
         (task.time ?? DateTime.now())
             .subtract(Duration(minutes: task.duration ?? 0)),
@@ -299,6 +322,13 @@ class _TaskDetailState extends State<TaskDetail> {
 
 @pragma('vm:entry-point')
 void alarmCallback() {
+  final DateTime now = DateTime.now();
+  final int isolateId = Isolate.current.hashCode;
+  FirebaseFirestoreServices.instance.getTaskCount().then((count) {
+    print(
+        "[$now] Hello, world!  === ${count} isolate=${isolateId} function='$alarmCallback'");
+  });
+
   FlutterRingtonePlayer().play(
     android: AndroidSounds.ringtone,
     ios: IosSounds.glass,

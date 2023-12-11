@@ -49,6 +49,8 @@ class _HomeViewState extends State<HomeView> {
       const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       ),
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
+      
       onDidReceiveNotificationResponse: (details) {
         if (details.payload != null) {
           try {
@@ -61,6 +63,7 @@ class _HomeViewState extends State<HomeView> {
           }
         }
       },
+      
     );
   }
 
