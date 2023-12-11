@@ -1,20 +1,22 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:convert';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
-import 'package:flutter_system_ringtones/flutter_system_ringtones.dart';
 import 'package:intl/intl.dart';
 import 'package:task_manager/Widgets/input/MSAInput.dart';
 import 'package:task_manager/core/firebase/firebase_firestore_services.dart';
 import 'package:task_manager/core/models/task_model.dart';
 import 'package:task_manager/main.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class TaskDetail extends StatefulWidget {
   final TaskModel? task;
-  const TaskDetail({super.key, this.task});
+  final bool isFromNotification;
+  const TaskDetail({super.key, this.task, this.isFromNotification = false});
 
   @override
   State<TaskDetail> createState() => _TaskDetailState();
@@ -53,26 +55,28 @@ class _TaskDetailState extends State<TaskDetail> {
         title: Text(task.title ?? 'Görev Ekle'),
       ),
       body: ListView(padding: const EdgeInsets.all(10), children: [
-        // ElevatedButton(
-        //     onPressed: () async {
-        //       var a = await FlutterSystemRingtones.getAlarmSounds();
-        //       a.forEach((element) {
-        //         print(element.toJson());
-        //         print('----------------- \n ');
-        //       });
+        ElevatedButton(
+            onPressed: () async {
+              // var a = await FlutterSystemRingtones.getAlarmSounds();
+              // a.forEach((element) {
+              //   print(element.toJson());
+              //   print('----------------- \n ');
+              // });
 
-        //       FlutterRingtonePlayer().play(
-        //         fromFile: a[10].uri,
-        //         ios: IosSounds.alarm,
-        //         looping: false, // Android only - API >= 28
-        //         volume: 0.9, // Android only - API >= 28
-        //         asAlarm: true, // Android only - all APIs
-        //       );
+              // FlutterRingtonePlayer().play(
+              //   fromFile: a[10].uri,
+              //   ios: IosSounds.alarm,
+              //   looping: false, // Android only - API >= 28
+              //   volume: 0.9, // Android only - API >= 28
+              //   asAlarm: true, // Android only - all APIs
+              // );
 
-        //       await Future.delayed(const Duration(seconds: 10))
-        //           .then((value) => FlutterRingtonePlayer().stop());
-        //     },
-        //     child: Icon(Icons.alarm)),
+              // await Future.delayed(const Duration(seconds: 10))
+              //     .then((value) => FlutterRingtonePlayer().stop());
+
+              FirebaseFirestoreServices.instance.getTaskCount();
+            },
+            child: Icon(Icons.alarm)),
         Form(
             child: Column(
           children: [
@@ -244,14 +248,28 @@ class _TaskDetailState extends State<TaskDetail> {
   }
 
   setAlarm() {
+    flutterLocalNotificationsPlugin.zonedSchedule(
+        1,
+        '${task.title}',
+        '${task.description}',
+        tz.TZDateTime.now(tz.local).add(task.time!.difference(DateTime.now()) -
+            Duration(minutes: task.duration ?? 0)),
+        NotificationDetails(
+            android: AndroidNotificationDetails(channel.id, channel.name,
+                channelDescription: channel.description,
+                playSound: false,
+                importance: Importance.max,
+                actions: [])),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: json.encode(task.toJson()),
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime);
+
     AndroidAlarmManager.oneShotAt(
         (task.time ?? DateTime.now())
             .subtract(Duration(minutes: task.duration ?? 0)),
-        int.tryParse(task.id ?? '1') ?? 1, 
-      alarmCallback
-    );
-    print(
-        'alarm setlendi ${int.tryParse(task.id ?? '1') ?? 1} ${(task.time ?? DateTime.now()).subtract(Duration(minutes: task.duration ?? 0))}');
+        int.tryParse(task.id ?? '1') ?? 1,
+        alarmCallback);
   }
 
   void _showDialog(Widget child) {
@@ -260,13 +278,10 @@ class _TaskDetailState extends State<TaskDetail> {
       builder: (BuildContext context) => Container(
         height: 216,
         padding: const EdgeInsets.only(top: 6.0),
-        // The Bottom margin is provided to align the popup above the system navigation bar.
         margin: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        // Provide a background color for the popup.
         color: CupertinoColors.systemBackground.resolveFrom(context),
-        // Use a SafeArea widget to avoid system overlaps.
         child: SafeArea(
           top: false,
           child: child,
@@ -284,28 +299,13 @@ class _TaskDetailState extends State<TaskDetail> {
 
 @pragma('vm:entry-point')
 void alarmCallback() {
-  print(" Hello, world! isolate= function=");
   FlutterRingtonePlayer().play(
-    // fromFile: ,
     android: AndroidSounds.ringtone,
     ios: IosSounds.glass,
-    looping: false, // Android only - API >= 28
-    volume: 1, // Android only - API >= 28
-    asAlarm: true, // Android only - all APIs
+    looping: false,
+    volume: 1,
+    asAlarm: true,
   );
   Future.delayed(const Duration(seconds: 30))
       .then((value) => FlutterRingtonePlayer().stop());
-
-      const AndroidNotificationDetails androidNotificationDetails =
-    AndroidNotificationDetails('your channel id', 'your channel name',
-        channelDescription: 'your channel description',
-        importance: Importance.max,
-        priority: Priority.high,
-        ticker: 'ticker');
-const NotificationDetails notificationDetails =
-    NotificationDetails(android: androidNotificationDetails);
- flutterLocalNotificationsPlugin.show(
-    0, 'plain title', 'plain body', notificationDetails,
-    payload: 'item x');
-  
 }

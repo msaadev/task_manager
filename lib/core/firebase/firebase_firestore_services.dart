@@ -19,7 +19,6 @@ class FirebaseFirestoreServices {
   }
 
   Future<String?> addTask(TaskModel task) async {
-    print('add task');
     try {
       await _firestore
           .collection('Users')
@@ -100,10 +99,22 @@ class FirebaseFirestoreServices {
       var request = await _firestore
           .collection('Users')
           .doc(_auth.currentUser!.uid)
-          .collection('Tasks')
           .get();
 
-      return request.docs.length;
+      var id = request.data()?['taskCount'];
+
+      await _firestore
+          .collection('Users')
+          .doc(_auth.currentUser!.uid)
+          .set({'taskCount': id == null ? 0 : id + 1});
+
+      print('$id id');
+
+      if (id != null) {
+        return id;
+      }
+
+      return 0;
     } catch (e) {
       if (e is FirebaseException) {
         return 0;
