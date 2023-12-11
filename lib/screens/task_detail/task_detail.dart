@@ -9,7 +9,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:flutter_system_ringtones/flutter_system_ringtones.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager/Widgets/input/MSAInput.dart';
+import 'package:task_manager/core/cache/locale_manager.dart';
 import 'package:task_manager/core/firebase/firebase_firestore_services.dart';
 import 'package:task_manager/core/models/task_model.dart';
 import 'package:task_manager/main.dart';
@@ -272,12 +274,24 @@ class _TaskDetailState extends State<TaskDetail> {
   }
 
   setAlarm() {
+    var date = (task.time ?? DateTime.now())
+        .subtract(Duration(minutes: task.duration ?? 0));
+
+    var formattedDate = DateFormat('yyyy-MM-dd HH:mm').format(date);
+
+    print(formattedDate + json.encode(task.toJson()));
+    var encoded = json.encode(task.toJson());
+    try {
+      LocaleManager.instance.setStringValue(formattedDate, encoded.toString());
+    } catch (e) {
+      print('hata == $e');
+    }
+
     flutterLocalNotificationsPlugin.zonedSchedule(
         1,
         '${task.title}',
         '${task.description}',
-        tz.TZDateTime.now(tz.local).add(task.time!.difference(DateTime.now()) -
-            Duration(minutes: task.duration ?? 0)),
+        tz.TZDateTime.now(tz.local).add(date.difference(DateTime.now())),
         NotificationDetails(
             android: AndroidNotificationDetails(channel.id, channel.name,
                 channelDescription: channel.description,
@@ -289,10 +303,7 @@ class _TaskDetailState extends State<TaskDetail> {
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime);
     AndroidAlarmManager.oneShotAt(
-        (task.time ?? DateTime.now())
-            .subtract(Duration(minutes: task.duration ?? 0)),
-        int.tryParse(task.id ?? '1') ?? 1,
-        alarmCallback);
+        date, int.tryParse(task.id ?? '1') ?? 1, alarmCallback);
   }
 
   void _showDialog(Widget child) {
@@ -322,20 +333,35 @@ class _TaskDetailState extends State<TaskDetail> {
 
 @pragma('vm:entry-point')
 void alarmCallback() {
-  final DateTime now = DateTime.now();
-  final int isolateId = Isolate.current.hashCode;
-  FirebaseFirestoreServices.instance.getTaskCount().then((count) {
-    print(
-        "[$now] Hello, world!  === ${count} isolate=${isolateId} function='$alarmCallback'");
-  });
+  try {
+    SharedPreferences.getInstance().then((value) {
+      value.reload();
+      final DateTime now = DateTime.now();
 
-  FlutterRingtonePlayer().play(
-    android: AndroidSounds.ringtone,
-    ios: IosSounds.glass,
-    looping: false,
-    volume: 1,
-    asAlarm: true,
-  );
-  Future.delayed(const Duration(seconds: 30))
-      .then((value) => FlutterRingtonePlayer().stop());
+    var formattedDate = DateFormat('yyyy-MM-dd HH:mm').format(now);
+
+    print(formattedDate);
+
+    var a = value.getString(formattedDate);
+    if (a != null && a.isNotEmpty) {
+      var task = TaskModel.fromJson(json.decode(a));
+
+      FlutterRingtonePlayer().play(
+        fromFile: task.music?.uri ?? '',
+        ios: IosSounds.glass,
+        looping: false,
+        volume: 1,
+        asAlarm: true,
+      );
+      Future.delayed(const Duration(seconds: 30))
+          .then((value) => FlutterRingtonePlayer().stop());
+    } else {
+      print('boş');
+    }
+
+    });
+    
+  } catch (e) {
+    print('error == $e');
+  }
 }

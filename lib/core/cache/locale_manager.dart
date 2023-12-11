@@ -16,6 +16,10 @@ class LocaleManager {
     instance._preferences ??= await SharedPreferences.getInstance();
   }
 
+  refresh() {
+    _preferences!.reload();
+  }
+
   Future<void> clearAll() async {
     await _preferences!.clear();
   }

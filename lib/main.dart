@@ -2,6 +2,7 @@ import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:task_manager/core/cache/locale_manager.dart';
 import 'package:task_manager/core/routes/navigation_Service.dart';
 import 'package:task_manager/screens/auth/signin_view.dart';
 import 'package:task_manager/screens/home/home_view.dart';
@@ -29,6 +30,7 @@ void main() async {
   await Firebase.initializeApp();
   tz.initializeTimeZones();
   await AndroidAlarmManager.initialize();
+  await LocaleManager.prefrencesInit();
   runApp(const MyApp());
 }
 
