@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager/core/firebase/firebase_auth_services.dart';
 import 'package:task_manager/core/firebase/firebase_firestore_services.dart';
 
@@ -12,6 +13,7 @@ import 'package:task_manager/core/routes/navigation_Service.dart';
 import 'package:task_manager/screens/auth/signin_view.dart';
 
 import '../../main.dart';
+import '../task_detail/alar_stop_view.dart';
 import '../task_detail/task_detail.dart';
 
 class HomeView extends StatefulWidget {
@@ -32,6 +34,9 @@ class _HomeViewState extends State<HomeView> {
     fetchTaskList();
 
     initNotification();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      checkAlarm();
+    });
   }
 
   initNotification() async {
@@ -50,20 +55,18 @@ class _HomeViewState extends State<HomeView> {
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       ),
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
-      
       onDidReceiveNotificationResponse: (details) {
         if (details.payload != null) {
           try {
             var data = json.decode(details.payload!);
             var task = TaskModel.fromJson(data);
             NavigationService.instance
-                .navigateToPageWidget(page: TaskDetail(task: task, isFromNotification: true));
+                .navigateToPageWidget(page: AlarmStopView(task: task));
           } catch (e) {
             print('samil error == $e');
           }
         }
       },
-      
     );
   }
 
@@ -115,15 +118,16 @@ class _HomeViewState extends State<HomeView> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Navigator.push(context, CupertinoPageRoute(builder: (context) {
-            return const TaskDetail();
-          })).then((value) {
-            if (value != null) {
-              setState(() {
-                taskList.add(value);
-              });
-            }
-          });
+          checkAlarm();
+          // Navigator.push(context, CupertinoPageRoute(builder: (context) {
+          //   return const TaskDetail();
+          // })).then((value) {
+          //   if (value != null) {
+          //     setState(() {
+          //       taskList.add(value);
+          //     });
+          //   }
+          // });
         },
         icon: const Icon(Icons.add),
         label: const Text('Görev Ekle'),
@@ -260,5 +264,18 @@ class _HomeViewState extends State<HomeView> {
     setState(() {
       isLoading = value ?? !isLoading;
     });
+  }
+
+  checkAlarm() {
+    var task = TaskModel.fromSharedNow;
+    if (task != null) {
+      if (!task.isDone) {
+        NavigationService.instance
+            .navigateToPageWidget(page: AlarmStopView(task: task));
+      }
+      print('hereeee');
+    } else {
+      print('null');
+    }
   }
 }

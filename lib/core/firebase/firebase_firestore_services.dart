@@ -1,3 +1,4 @@
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -63,6 +64,7 @@ class FirebaseFirestoreServices {
           .collection('Tasks')
           .doc(task.id)
           .delete();
+      AndroidAlarmManager.cancel(int.tryParse(task.id ?? '1') ?? 1);
 
       return null;
     } catch (e) {

@@ -2,6 +2,7 @@ import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:task_manager/core/cache/locale_manager.dart';
 import 'package:task_manager/core/routes/navigation_Service.dart';
 import 'package:task_manager/screens/auth/signin_view.dart';
@@ -21,8 +22,17 @@ FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse notificationResponse) {
-  print('samil background come');
-  
+  print('samil background come ${notificationResponse.actionId}');
+  if (notificationResponse.actionId != null) {
+    try {
+      if (notificationResponse.actionId == 'alarm_stop') {
+        print('ringtone stopped');
+        FlutterRingtonePlayer().stop();
+      }
+    } catch (e) {
+      print('samil error == $e');
+    }
+  }
 }
 
 void main() async {

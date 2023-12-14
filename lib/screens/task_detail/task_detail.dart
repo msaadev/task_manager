@@ -1,7 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:convert';
-import 'dart:isolate';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -19,8 +18,11 @@ import 'package:timezone/timezone.dart' as tz;
 
 class TaskDetail extends StatefulWidget {
   final TaskModel? task;
-  final bool isFromNotification;
-  const TaskDetail({super.key, this.task, this.isFromNotification = false});
+
+  const TaskDetail({
+    super.key,
+    this.task,
+  });
 
   @override
   State<TaskDetail> createState() => _TaskDetailState();
@@ -135,13 +137,8 @@ class _TaskDetailState extends State<TaskDetail> {
             ).then((value) {
               if (value != null) {
                 setState(() {
-                  task.time = DateTime(
-                    task.time!.year,
-                    task.time!.month,
-                    task.time!.day,
-                    value.hour,
-                    value.minute,
-                  );
+                  task.time = DateTime(task.time!.year, task.time!.month,
+                      task.time!.day, value.hour, value.minute, 0, 0, 0);
                 });
               }
             });
@@ -283,27 +280,34 @@ class _TaskDetailState extends State<TaskDetail> {
     var encoded = json.encode(task.toJson());
     try {
       LocaleManager.instance.setStringValue(formattedDate, encoded.toString());
+
+      flutterLocalNotificationsPlugin.zonedSchedule(
+          1,
+          '${task.title}',
+          '${task.description}',
+          tz.TZDateTime.now(tz.local).add(date.difference(DateTime.now())),
+          NotificationDetails(
+              android: AndroidNotificationDetails(
+            channel.id,
+            channel.name,
+            channelDescription: channel.description,
+            playSound: false,
+            importance: Importance.max,
+            category: AndroidNotificationCategory.alarm,
+          )),
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          payload: json.encode(task.toJson()),
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime);
+
+      print(date.toString());
+
+      AndroidAlarmManager.oneShotAt(
+          date, int.tryParse(task.id ?? '1') ?? 1, alarmCallback,
+          exact: true, wakeup: true, rescheduleOnReboot: true);
     } catch (e) {
       print('hata == $e');
     }
-
-    flutterLocalNotificationsPlugin.zonedSchedule(
-        1,
-        '${task.title}',
-        '${task.description}',
-        tz.TZDateTime.now(tz.local).add(date.difference(DateTime.now())),
-        NotificationDetails(
-            android: AndroidNotificationDetails(channel.id, channel.name,
-                channelDescription: channel.description,
-                playSound: false,
-                importance: Importance.max,
-                category: AndroidNotificationCategory.alarm)),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        payload: json.encode(task.toJson()),
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime);
-    AndroidAlarmManager.oneShotAt(
-        date, int.tryParse(task.id ?? '1') ?? 1, alarmCallback);
   }
 
   void _showDialog(Widget child) {
@@ -338,29 +342,25 @@ void alarmCallback() {
       value.reload();
       final DateTime now = DateTime.now();
 
-    var formattedDate = DateFormat('yyyy-MM-dd HH:mm').format(now);
+      var formattedDate = DateFormat('yyyy-MM-dd HH:mm').format(now);
 
-    print(formattedDate);
+      print(formattedDate);
 
-    var a = value.getString(formattedDate);
-    if (a != null && a.isNotEmpty) {
-      var task = TaskModel.fromJson(json.decode(a));
+      var a = value.getString(formattedDate);
+      if (a != null && a.isNotEmpty) {
+        var task = TaskModel.fromJson(json.decode(a));
 
-      FlutterRingtonePlayer().play(
-        fromFile: task.music?.uri ?? '',
-        ios: IosSounds.glass,
-        looping: false,
-        volume: 1,
-        asAlarm: true,
-      );
-      Future.delayed(const Duration(seconds: 30))
-          .then((value) => FlutterRingtonePlayer().stop());
-    } else {
-      print('boş');
-    }
-
+        FlutterRingtonePlayer().play(
+          fromFile: task.music?.uri ?? '',
+          ios: IosSounds.glass,
+          looping: false,
+          volume: 0.1,
+          asAlarm: true,
+        );
+        Future.delayed(const Duration(minutes: 1))
+            .then((value) => FlutterRingtonePlayer().stop());
+      } else {}
     });
-    
   } catch (e) {
     print('error == $e');
   }
