@@ -54,14 +54,7 @@ class _AlarmStopViewState extends State<AlarmStopView> {
             Text(taskModel.title ?? ''),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                taskModel.isDone = true;
-                taskModel.saveToShared();
-                FlutterRingtonePlayer().stop();
-                AndroidAlarmManager.cancel(
-                    int.tryParse(widget.task.id ?? '0') ?? 1);
-                exit(0);
-              },
+              onPressed:onPhoneShaked,
               child: const Text('Alarmı Durdur'),
             ),
           ],
@@ -70,9 +63,9 @@ class _AlarmStopViewState extends State<AlarmStopView> {
     );
   }
 
-  void onPhoneShaked() {
+  void onPhoneShaked() async {
     taskModel.isDone = true;
-    taskModel.saveToShared();
+    await taskModel.saveToShared();
     FlutterRingtonePlayer().stop();
     AndroidAlarmManager.cancel(int.tryParse(widget.task.id ?? '0') ?? 1);
     exit(0);

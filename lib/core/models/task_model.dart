@@ -45,7 +45,7 @@ class TaskModel {
     return data;
   }
 
-  saveToShared() {
+  Future saveToShared() async {
     var date =
         (time ?? DateTime.now()).subtract(Duration(minutes: duration ?? 0));
     isDone = true;
@@ -55,7 +55,7 @@ class TaskModel {
     print(formattedDate + json.encode(toJson()));
     var encoded = json.encode(toJson());
     try {
-      LocaleManager.instance.setStringValue(formattedDate, encoded.toString());
+    await  LocaleManager.instance.setStringValue(formattedDate, encoded.toString());
     } catch (e) {
       print('hata == $e');
     }
