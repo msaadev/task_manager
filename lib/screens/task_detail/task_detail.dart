@@ -185,7 +185,7 @@ class _TaskDetailState extends State<TaskDetail> {
                 ? 'Alarm Sesi Seçilmedi'
                 : '${task.music?.title}',
           ),
-          trailing: const Icon(Icons.timer),
+          trailing: const Icon(Icons.music_note),
           onTap: () {
             _showDialog(CupertinoPicker(
                 magnification: 1.22,

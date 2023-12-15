@@ -13,7 +13,7 @@ import 'package:task_manager/core/routes/navigation_Service.dart';
 import 'package:task_manager/screens/auth/signin_view.dart';
 
 import '../../main.dart';
-import '../task_detail/alar_stop_view.dart';
+import '../task_detail/alarm_stop_view.dart';
 import '../task_detail/task_detail.dart';
 
 class HomeView extends StatefulWidget {

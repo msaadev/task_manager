@@ -48,6 +48,7 @@ class TaskModel {
   saveToShared() {
     var date =
         (time ?? DateTime.now()).subtract(Duration(minutes: duration ?? 0));
+    isDone = true;
 
     var formattedDate = DateFormat('yyyy-MM-dd HH:mm').format(date);
 

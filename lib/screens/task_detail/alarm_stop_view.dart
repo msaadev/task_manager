@@ -24,6 +24,15 @@ class _AlarmStopViewState extends State<AlarmStopView> {
     super.initState();
     taskModel = widget.task;
     detector = ShakeDetector.autoStart(onPhoneShake: onPhoneShaked);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      var a = TaskModel.fromSharedNow;
+      if (a != null) {
+      if (a.isDone) {
+        Navigator.pop(context);
+      }
+        
+      }
+    });
   }
 
   @override
@@ -53,7 +62,7 @@ class _AlarmStopViewState extends State<AlarmStopView> {
                     int.tryParse(widget.task.id ?? '0') ?? 1);
                 exit(0);
               },
-              child: const Text('Stop'),
+              child: const Text('Alarmı Durdur'),
             ),
           ],
         ),
