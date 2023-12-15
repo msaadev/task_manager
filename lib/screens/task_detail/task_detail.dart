@@ -353,7 +353,7 @@ void alarmCallback() {
         FlutterRingtonePlayer().play(
           fromFile: task.music?.uri ?? '',
           ios: IosSounds.glass,
-          looping: false,
+          looping: true,
           volume: 0.1,
           asAlarm: true,
         );

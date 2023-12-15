@@ -118,16 +118,15 @@ class _HomeViewState extends State<HomeView> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          checkAlarm();
-          // Navigator.push(context, CupertinoPageRoute(builder: (context) {
-          //   return const TaskDetail();
-          // })).then((value) {
-          //   if (value != null) {
-          //     setState(() {
-          //       taskList.add(value);
-          //     });
-          //   }
-          // });
+          Navigator.push(context, CupertinoPageRoute(builder: (context) {
+            return const TaskDetail();
+          })).then((value) {
+            if (value != null) {
+              setState(() {
+                taskList.add(value);
+              });
+            }
+          });
         },
         icon: const Icon(Icons.add),
         label: const Text('Görev Ekle'),
