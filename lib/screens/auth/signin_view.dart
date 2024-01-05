@@ -23,9 +23,11 @@ class _SigninViewState extends State<SigninView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      
       body: FlutterLogin(
         title: 'Task Manager',
         theme: LoginTheme(
+           
           accentColor: Colors.white,
           pageColorDark: Colors.blue,
           footerBackgroundColor: Colors.blue,

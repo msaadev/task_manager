@@ -11,6 +11,7 @@ import 'package:task_manager/core/firebase/firebase_firestore_services.dart';
 import 'package:task_manager/core/models/task_model.dart';
 import 'package:task_manager/core/routes/navigation_Service.dart';
 import 'package:task_manager/screens/auth/signin_view.dart';
+import 'package:timezone/timezone.dart';
 
 import '../../main.dart';
 import '../task_detail/alarm_stop_view.dart';
@@ -33,8 +34,8 @@ class _HomeViewState extends State<HomeView> {
     super.initState();
     fetchTaskList();
 
-    initNotification();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      initNotification();
       checkAlarm();
     });
   }
@@ -146,9 +147,8 @@ class _HomeViewState extends State<HomeView> {
                   itemCount: taskList.length,
                   itemBuilder: (context, index) {
                     var item = taskList[index];
-                    var date = DateFormat(
-                      'dd MMMM yyyy , HH:mm',
-                    ).format(item.time ?? DateTime.now());
+                    var date = DateFormat('dd MMMM yyyy , HH:mm', 'tr')
+                        .format(item.time ?? DateTime.now());
 
                     return InkWell(
                       onTap: () {
@@ -269,8 +269,10 @@ class _HomeViewState extends State<HomeView> {
     var task = TaskModel.fromSharedNow;
     if (task != null) {
       if (!task.isDone) {
-        NavigationService.instance
-            .navigateToPageWidget(page: AlarmStopView(task: task));
+        if (mounted) {
+          NavigationService.instance
+              .navigateToPageWidget(page: AlarmStopView(task: task));
+        }
       }
       print('hereeee');
     } else {

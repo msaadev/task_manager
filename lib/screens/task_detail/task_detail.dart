@@ -104,7 +104,7 @@ class _TaskDetailState extends State<TaskDetail> {
           subtitle: Text(
             task.time == null
                 ? 'Tarih Seçilmedi'
-                : DateFormat('dd MMMM yyyy').format(task.time!),
+                : DateFormat('dd MMMM yyyy', 'tr').format(task.time!),
           ),
           onTap: () {
             showDatePicker(
@@ -127,7 +127,7 @@ class _TaskDetailState extends State<TaskDetail> {
           subtitle: Text(
             task.time == null
                 ? 'Saat Seçilmedi'
-                : DateFormat('HH:mm').format(task.time!),
+                : DateFormat('HH:mm', 'tr').format(task.time!),
           ),
           trailing: const Icon(Icons.schedule),
           onTap: () {
@@ -342,7 +342,7 @@ void alarmCallback() {
       value.reload();
       final DateTime now = DateTime.now();
 
-      var formattedDate = DateFormat('yyyy-MM-dd HH:mm').format(now);
+      var formattedDate = DateFormat('yyyy-MM-dd HH:mm', 'tr').format(now);
 
       print(formattedDate);
 
@@ -359,6 +359,8 @@ void alarmCallback() {
         );
         Future.delayed(const Duration(minutes: 1))
             .then((value) => FlutterRingtonePlayer().stop());
+
+        main();
       } else {}
     });
   } catch (e) {

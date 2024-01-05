@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:task_manager/core/cache/locale_manager.dart';
 import 'package:task_manager/core/routes/navigation_Service.dart';
 import 'package:task_manager/screens/auth/signin_view.dart';
@@ -38,8 +39,10 @@ void notificationTapBackground(NotificationResponse notificationResponse) {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  
   tz.initializeTimeZones();
   await AndroidAlarmManager.initialize();
+  initializeDateFormatting();
   await LocaleManager.prefrencesInit();
   runApp(const MyApp());
 }
@@ -52,6 +55,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Görev Yöneticisi',
       locale: const Locale('tr', 'TR'),
+      localizationsDelegates: const {DefaultMaterialLocalizations.delegate},
+      
       navigatorKey: NavigationService.instance.navigatorKey,
       home: FirebaseAuthService.instance.isLogged()
           ? const HomeView()
