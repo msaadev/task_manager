@@ -359,8 +359,6 @@ void alarmCallback() {
         );
         Future.delayed(const Duration(minutes: 1))
             .then((value) => FlutterRingtonePlayer().stop());
-
-        main();
       } else {}
     });
   } catch (e) {
