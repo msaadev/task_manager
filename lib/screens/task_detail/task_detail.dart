@@ -108,6 +108,7 @@ class _TaskDetailState extends State<TaskDetail> {
           ),
           onTap: () {
             showDatePicker(
+              locale: const Locale('tr'),
               context: context,
               initialDate: DateTime.now(),
               firstDate: DateTime.now(),
@@ -279,7 +280,9 @@ class _TaskDetailState extends State<TaskDetail> {
     print(formattedDate + json.encode(task.toJson()));
     var encoded = json.encode(task.toJson());
     try {
+      print('here 1');
       LocaleManager.instance.setStringValue(formattedDate, encoded.toString());
+      print('here 2');
 
       flutterLocalNotificationsPlugin.zonedSchedule(
           1,
@@ -299,14 +302,14 @@ class _TaskDetailState extends State<TaskDetail> {
           payload: json.encode(task.toJson()),
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime);
-
-      print(date.toString());
+      print('here 3');
 
       AndroidAlarmManager.oneShotAt(
           date, int.tryParse(task.id ?? '1') ?? 1, alarmCallback,
           exact: true, wakeup: true, rescheduleOnReboot: true);
+      print('here 4');
     } catch (e) {
-      print('hata == $e');
+      print('hata == @setAlarm $e');
     }
   }
 
@@ -342,7 +345,7 @@ void alarmCallback() {
       value.reload();
       final DateTime now = DateTime.now();
 
-      var formattedDate = DateFormat('yyyy-MM-dd HH:mm', 'tr').format(now);
+      var formattedDate = DateFormat('yyyy-MM-dd HH:mm').format(now);
 
       print(formattedDate);
 
@@ -354,7 +357,7 @@ void alarmCallback() {
           fromFile: task.music?.uri ?? '',
           ios: IosSounds.glass,
           looping: true,
-          volume: 0.1,
+          volume: 1,
           asAlarm: true,
         );
         Future.delayed(const Duration(minutes: 1))

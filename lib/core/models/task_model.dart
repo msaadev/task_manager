@@ -57,7 +57,7 @@ class TaskModel {
     try {
     await  LocaleManager.instance.setStringValue(formattedDate, encoded.toString());
     } catch (e) {
-      print('hata == $e');
+      print('hata == @saveToShared $e');
     }
   }
 

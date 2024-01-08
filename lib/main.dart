@@ -2,6 +2,7 @@ import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:task_manager/core/cache/locale_manager.dart';
@@ -10,7 +11,7 @@ import 'package:task_manager/screens/auth/signin_view.dart';
 import 'package:task_manager/screens/home/home_view.dart';
 import 'core/firebase/firebase_auth_services.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
+
 
 AndroidNotificationChannel channel = const AndroidNotificationChannel(
   'high_importance_channel', // id
@@ -39,10 +40,9 @@ void notificationTapBackground(NotificationResponse notificationResponse) {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  
-  tz.initializeTimeZones();
   await AndroidAlarmManager.initialize();
-  initializeDateFormatting();
+   tz.initializeTimeZones();
+  await initializeDateFormatting('tr', null);
   await LocaleManager.prefrencesInit();
   runApp(const MyApp());
 }
@@ -55,8 +55,14 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Görev Yöneticisi',
       locale: const Locale('tr', 'TR'),
-      localizationsDelegates: const {DefaultMaterialLocalizations.delegate},
-      
+      supportedLocales: const [
+         Locale('tr', 'TR'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       navigatorKey: NavigationService.instance.navigatorKey,
       home: FirebaseAuthService.instance.isLogged()
           ? const HomeView()

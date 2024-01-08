@@ -33,9 +33,8 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     super.initState();
     fetchTaskList();
-
+    initNotification();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      initNotification();
       checkAlarm();
     });
   }
